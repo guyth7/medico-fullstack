@@ -370,7 +370,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#071426] text-white">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-white/10 bg-[#0B192D] p-5 lg:flex lg:flex-col">
+      <aside className="admin-sidebar fixed inset-y-0 left-0 hidden w-64 border-r border-white/10 bg-[#0B192D] p-5 lg:flex lg:flex-col">
         <div className="mb-8 flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#1D7FE8] to-[#10B981]">
             <ShieldCheck className="h-6 w-6" />
@@ -406,7 +406,7 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      <main className="min-h-screen lg:ml-64">
+      <main className="admin-dashboard-content min-h-screen lg:ml-64">
         <header className="sticky top-0 z-20 border-b border-white/10 bg-[#071426]/90 px-4 py-4 backdrop-blur-xl sm:px-7">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <div>

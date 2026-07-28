@@ -132,3 +132,35 @@ html[dir='rtl'] .medico-sidebar .ml-3 {
 html[dir='rtl'] .medico-sidebar-arrow {
   transform: rotate(180deg);
 }
+
+html[dir='rtl'] .admin-sidebar {
+  right: 0 !important;
+  left: auto !important;
+  border-right: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 1024px) {
+  html[dir='rtl'] .admin-dashboard-content {
+    margin-right: 16rem;
+    margin-left: 0;
+  }
+}
+
+html[dir='rtl'] input,
+html[dir='rtl'] textarea,
+html[dir='rtl'] select {
+  text-align: right;
+}
+
+html[dir='rtl'] input[type='email'],
+html[dir='rtl'] input[type='tel'],
+html[dir='rtl'] input[inputmode='numeric'],
+html[dir='rtl'] .font-mono {
+  direction: ltr;
+  text-align: right;
+}
+
+html[dir='rtl'] table {
+  text-align: right;
+}
