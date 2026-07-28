@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isWebsiteRole(role) {
+      return role in ['Doctor', 'Hospital', 'Laboratory', 'Pharmacy'];
+    }
+
+    function isWebsiteProfileOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isWebsiteProfileWriteOwner(userId) {
+      return isSignedIn()
+        && (request.auth.uid == userId || request.resource.data.uid == request.auth.uid);
+    }
+
+    function isValidWebsiteProfile(userId) {
+      return isWebsiteProfileWriteOwner(userId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.fullName is string
+        && isWebsiteRole(request.resource.data.role)
+        && request.resource.data.authProvider == 'password';
+    }
+
+    match /patients/{document=**} {
+      allow read, create, update, delete: if true;
+    }
+
+    match /website_users/{userId} {
+      allow get: if isWebsiteProfileOwner(userId)
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+
+      // Allows migration from legacy name-based docs queried by uid.
+      allow list: if isSignedIn();
+
+      allow create: if isValidWebsiteProfile(userId);
+
+      allow update: if isValidWebsiteProfile(userId)
+        && resource.data.uid == request.auth.uid;
+
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

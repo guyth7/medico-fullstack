@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-navy: #0A1628;
+  --bg-navy-2: #0F1E36;
+  --bg-card: #ffffff;
+  --accent: #1D7FE8;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --border: rgba(255,255,255,0.08);
+  --font-sora: Inter, Segoe UI, system-ui, sans-serif;
+  --font-dm-sans: Inter, Segoe UI, system-ui, sans-serif;
+  --font-mono: Consolas, Cascadia Mono, ui-monospace, monospace;
+}
+
+html, body { background: var(--bg-navy); }
+
+.font-display { font-family: var(--font-sora), system-ui, sans-serif; }
+.font-sans { font-family: var(--font-dm-sans), system-ui, sans-serif; }
+.font-mono { font-family: var(--font-mono), ui-monospace, monospace; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Pulse */
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(29,127,232,0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(29,127,232,0); }
+  100% { box-shadow: 0 0 0 0 rgba(29,127,232,0); }
+}
+.pulse-ring { animation: pulseRing 2s infinite; }
+
+/* Medico loading screen: transform/opacity-only animations stay on the compositor. */
+@keyframes medicoBreathe {
+  0%, 100% { transform: scale(0.96); opacity: 0.9; }
+  50% { transform: scale(1.025); opacity: 1; }
+}
+
+@keyframes medicoRipple {
+  0% { transform: scale(0.82); opacity: 0; }
+  18% { opacity: 0.55; }
+  78%, 100% { transform: scale(1.28); opacity: 0; }
+}
+
+@keyframes medicoDots {
+  0%, 25% { clip-path: inset(0 100% 0 0); }
+  50% { clip-path: inset(0 60% 0 0); }
+  75% { clip-path: inset(0 30% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+.medico-loader-stage {
+  contain: layout paint style;
+  isolation: isolate;
+}
+
+.medico-loader-logo {
+  animation: medicoBreathe 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.medico-loader-ring {
+  animation: medicoRipple 2.4s cubic-bezier(0.2, 0.65, 0.35, 1) infinite;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.medico-loader-ring-secondary { animation-delay: 1.2s; }
+
+.medico-loading-dots {
+  animation: medicoDots 1.4s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .medico-loader-logo,
+  .medico-loader-ring,
+  .medico-loading-dots {
+    animation: none;
+  }
+
+  .medico-loader-ring { opacity: 0.2; }
+}
+
+/* Grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(29,127,232,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29,127,232,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+nextjs-portal {
+  display: none !important;
+}
+
+html[dir='rtl'] body {
+  text-align: right;
+}
+
+html[dir='rtl'] .text-left {
+  text-align: right;
+}
+
+html[dir='rtl'] .text-right {
+  text-align: left;
+}
+
+html[dir='rtl'] .medico-sidebar {
+  right: 0 !important;
+  left: auto !important;
+  border-right: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html[dir='rtl'] .medico-dashboard-content {
+  margin-right: 4rem;
+  margin-left: 0;
+}
+
+html[dir='rtl'] .medico-sidebar .ml-3 {
+  margin-right: 0.75rem;
+  margin-left: 0;
+}
+
+html[dir='rtl'] .medico-sidebar-arrow {
+  transform: rotate(180deg);
+}

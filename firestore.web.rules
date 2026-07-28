@@ -1,0 +1,195 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
+    }
+
+    function isVerifiedPatient() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.name is string
+        && request.auth.token.name.matches('^[0-9]{11}$');
+    }
+
+    function patientIdentityMatches(patientData) {
+      return isVerifiedPatient()
+        && (
+          (patientData.national_id is string
+            && patientData.national_id == request.auth.token.name)
+          || (patientData.nationalId is string
+            && patientData.nationalId == request.auth.token.name)
+        );
+    }
+
+    function hasStaffProfile() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/website_users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/website_users/$(request.auth.uid)).data.role
+          in ['Doctor', 'Hospital', 'Laboratory', 'Pharmacy']
+        && (
+          !('approvalStatus' in get(
+            /databases/$(database)/documents/website_users/$(request.auth.uid)
+          ).data)
+          || get(
+            /databases/$(database)/documents/website_users/$(request.auth.uid)
+          ).data.approvalStatus == 'approved'
+        );
+    }
+
+    function staffRole() {
+      return get(
+        /databases/$(database)/documents/website_users/$(request.auth.uid)
+      ).data.role;
+    }
+
+    function staffCanWriteSection(section) {
+      return hasStaffProfile()
+        && (
+          staffRole() == 'Hospital'
+          || (staffRole() == 'Doctor'
+            && !(section in ['lab', 'radiology']))
+          || (staffRole() == 'Laboratory'
+            && !(section in ['allergies', 'diagnoses', 'prescriptions', 'surgeries']))
+        );
+    }
+
+    function patientOwnsRecord(patientData) {
+      return isSignedIn()
+        && patientData.patient_auth_uid is string
+        && patientData.patient_auth_uid == request.auth.uid;
+    }
+
+    function patientOwnsParent(patientId) {
+      return patientOwnsRecord(
+        get(/databases/$(database)/documents/patients/$(patientId)).data
+      );
+    }
+
+    match /patients/{patientId} {
+      // A verified patient may discover their own record by the National ID
+      // stored in their Firebase Authentication display-name claim. This
+      // allows the mobile client to establish the UID link without a paid
+      // Cloud Function. Once linked, the UID remains the primary guard.
+      allow read: if isAdmin()
+        || hasStaffProfile()
+        || patientOwnsRecord(resource.data)
+        || patientIdentityMatches(resource.data);
+      allow create, update, delete: if isAdmin() || staffCanWriteSection('patients');
+      allow update: if patientIdentityMatches(resource.data)
+        && !('patient_auth_uid' in resource.data)
+        && request.resource.data.patient_auth_uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['patient_auth_uid', 'identity_linked_at']);
+
+      match /prescriptions/{prescriptionId} {
+        allow read: if isAdmin() || hasStaffProfile() || patientOwnsParent(patientId);
+        allow create, update, delete: if isAdmin() || staffCanWriteSection('prescriptions');
+      }
+
+      match /{section}/{nestedDocument=**} {
+        allow read: if isAdmin() || hasStaffProfile() || patientOwnsParent(patientId);
+        allow create, update, delete: if isAdmin() || staffCanWriteSection(section);
+      }
+    }
+
+    match /users/{userId} {
+      allow create: if isVerifiedPatient()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == 'patient'
+        && (
+          request.resource.data.nationalId == request.auth.token.name
+          || request.resource.data.national_id == request.auth.token.name
+        );
+      allow get: if isAdmin() || (isSignedIn()
+        && (userId == request.auth.uid || resource.data.uid == request.auth.uid));
+      allow list: if isAdmin()
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isVerifiedPatient()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == resource.data.role
+        && (
+          request.resource.data.nationalId == request.auth.token.name
+          || request.resource.data.national_id == request.auth.token.name
+        );
+      allow delete: if false;
+    }
+
+    match /nationalIds/{nationalId} {
+      allow create: if isVerifiedPatient()
+        && nationalId == request.auth.token.name
+        && request.resource.data.uid == request.auth.uid;
+      // Registration checks this deterministic reservation path before it
+      // exists. Permit only the verified account whose Authentication
+      // display-name claim is the same National ID to perform that get.
+      allow get: if isAdmin()
+        || (isVerifiedPatient() && nationalId == request.auth.token.name);
+      allow list: if isAdmin()
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isVerifiedPatient()
+        && nationalId == request.auth.token.name
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /website_users/{userId} {
+      allow get: if isAdmin()
+        || (isSignedIn()
+          && (request.auth.uid == userId || resource.data.uid == request.auth.uid));
+      allow list: if isAdmin()
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+
+      allow create: if isAdmin();
+
+      allow update: if isAdmin()
+        || (isSignedIn()
+          && userId == request.auth.uid
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.approvalStatus == resource.data.approvalStatus);
+
+      allow delete: if isAdmin();
+    }
+
+    match /staff_requests/{userId} {
+      function validRequestedRole(role) {
+        return role in ['Doctor', 'Hospital', 'Laboratory', 'Pharmacy'];
+      }
+
+      allow create: if isSignedIn()
+        && userId == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.fullName is string
+        && validRequestedRole(request.resource.data.role)
+        && request.resource.data.status == 'pending';
+      allow get: if isAdmin() || (isSignedIn() && userId == request.auth.uid);
+      allow list: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && (isAdmin() || adminId == request.auth.uid);
+      allow list, create, update, delete: if isAdmin();
+    }
+
+    match /admin_audit/{eventId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
