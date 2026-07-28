@@ -10,7 +10,7 @@ import { deletePatientRecord, ensurePatientSubcollections, listPatients, patient
 import { getMedicalRecordPermissions } from '@/lib/medicalRecordPermissions'
 import { getPatientYearOfBirth } from '@/lib/patientDemographics'
 import { ConfirmModal, DashboardShell, SlideOverPanel } from '@/components/medi/shared'
-import PatientDetail from '@/app/doctor/patient/[id]/page'
+import PatientDetail from '@/app/doctor/patient/page'
 
 const emptyPatientForm = {
   name: '',

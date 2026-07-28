@@ -509,7 +509,7 @@ export default function AdminPage() {
                         <Cell>{formatDate(patient.createdAt)}</Cell>
                         <Cell>
                           <div className="flex gap-2">
-                            <Link href={`/admin/patient/${patient.nationalId || patient.national_id}`} className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 p-2 text-emerald-300" aria-label="Open full medical record"><ExternalLink className="h-4 w-4" /></Link>
+                            <Link href={`/admin/patient?id=${encodeURIComponent(patient.nationalId || patient.national_id)}`} className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 p-2 text-emerald-300" aria-label="Open full medical record"><ExternalLink className="h-4 w-4" /></Link>
                             <button onClick={() => openPatientEditor(patient)} className="rounded-lg border border-sky-400/25 bg-sky-500/10 p-2 text-sky-300" aria-label="Edit patient"><Edit3 className="h-4 w-4" /></button>
                             <button onClick={() => setDeleteTarget(patient)} className="rounded-lg border border-red-400/25 bg-red-500/10 p-2 text-red-300" aria-label="Delete patient"><Trash2 className="h-4 w-4" /></button>
                           </div>

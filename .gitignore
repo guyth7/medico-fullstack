@@ -79,6 +79,8 @@ agenthub/agents/youtube/db
 
 # Build caches
 .cache/
+.open-next/
+.wrangler/
 
 memory/test_credentials.md
 

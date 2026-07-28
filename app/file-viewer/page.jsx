@@ -1,12 +1,16 @@
 'use client'
-import { use, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Download, FileText } from 'lucide-react'
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { useSearchParams } from 'next/navigation'
 
-export default function FileViewer({ params }) {
-  const { patientId, section, recordId } = use(params)
+export default function FileViewer() {
+  const searchParams = useSearchParams()
+  const patientId = searchParams.get('patientId') || ''
+  const section = searchParams.get('section') || ''
+  const recordId = searchParams.get('recordId') || ''
   const [record, setRecord] = useState(null)
   const [fileUrl, setFileUrl] = useState('')
   const [loading, setLoading] = useState(true)
@@ -132,7 +136,7 @@ export default function FileViewer({ params }) {
   return (
     <div className="min-h-screen bg-[#0A1628] text-white">
       <header className="sticky top-0 z-10 bg-[#0A1628]/90 backdrop-blur border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <Link href={`/doctor/patient/${patientId}`} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white">
+        <Link href={`/doctor/patient?id=${encodeURIComponent(patientId)}`} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white">
           <ArrowLeft className="w-4 h-4" /> Back to patient
         </Link>
         <a href={fileUrl} download={downloadName} className="inline-flex items-center gap-2 rounded-lg bg-[#1D7FE8] px-4 py-2 text-sm font-medium hover:bg-[#1D7FE8]/90">

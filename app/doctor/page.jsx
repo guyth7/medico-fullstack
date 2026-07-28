@@ -267,7 +267,7 @@ useEffect(() => {
         id: p.id,
         name: p.name,
         nationalId: p.nationalId,
-        href: `/doctor/patient/${p.nationalId}`,
+        href: `/doctor/patient?id=${encodeURIComponent(p.nationalId)}`,
       }))}>
       <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
@@ -296,7 +296,7 @@ useEffect(() => {
               {results.length === 0 && <div className="text-slate-500 text-sm bg-white/5 rounded-xl p-6 text-center">No patients matched your search</div>}
               {results.map(p => (
                 <div key={p.id} className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition">
-                  <Link href={`/doctor/patient/${p.nationalId}`} className="min-w-0 flex flex-1 items-center gap-4">
+                  <Link href={`/doctor/patient?id=${encodeURIComponent(p.nationalId)}`} className="min-w-0 flex flex-1 items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1D7FE8] to-[#10B981] flex items-center justify-center font-display font-bold">{(p.name || 'Patient').split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
                   <div className="flex-1">
                     <div className="font-display font-semibold">{p.name || 'Unnamed Patient'}</div>

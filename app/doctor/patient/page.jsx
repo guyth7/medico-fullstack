@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, FileText, Activity, Pill, Pencil, Trash2 } from 'lucide-react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth, db } from '@/lib/firebase'
@@ -33,7 +33,7 @@ const formatNumberUnit = (value, unit) => {
 const firestoreInlineFileMaxBase64Length = 850 * 1024
 
 export default function PatientDetail({ patientId: patientIdProp, activeRole = 'Doctor', backHref = '/doctor', onBack }) {
-  const routeParams = useParams()
+  const searchParams = useSearchParams()
   const [patient, setPatient] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('overview')
@@ -64,7 +64,7 @@ export default function PatientDetail({ patientId: patientIdProp, activeRole = '
   const [prescriptions, setPrescriptions] = useState([])
   const [prescriptionAuthor, setPrescriptionAuthor] = useState(activeRole)
 
-  const patientId = patientIdProp || routeParams?.id
+  const patientId = patientIdProp || searchParams.get('id')
   const permissionsFor = (field) => getMedicalRecordPermissions(activeRole, field)
   const requirePermission = (field, action) => {
     if (canUseMedicalRecordAction(activeRole, field, action)) return true
@@ -134,7 +134,7 @@ export default function PatientDetail({ patientId: patientIdProp, activeRole = '
         ...record,
         openFileFromFirebase: typeof window === 'undefined'
           ? record.openFileFromFirebase
-          : `${window.location.origin}/file-viewer/${loadedPatient.id}/${section}/${record.id}`,
+          : `${window.location.origin}/file-viewer?patientId=${encodeURIComponent(loadedPatient.id)}&section=${encodeURIComponent(section)}&recordId=${encodeURIComponent(record.id)}`,
       }))
 
       setPatient(loadedPatient)
@@ -559,7 +559,7 @@ export default function PatientDetail({ patientId: patientIdProp, activeRole = '
         await updatePatientRecord(section, editingRecord.id, data, setRecords)
       }
       if (form.file && !isEditing) {
-        const viewerPath = `/file-viewer/${patient.firestoreId}/${section}/${record.id}`
+        const viewerPath = `/file-viewer?patientId=${encodeURIComponent(patient.firestoreId)}&section=${encodeURIComponent(section)}&recordId=${encodeURIComponent(record.id)}`
         const viewerUrl = `${window.location.origin}${viewerPath}`
         await updateDoc(doc(db, 'patients', patient.firestoreId, section, record.id), {
           storageStatus: 'saved',
