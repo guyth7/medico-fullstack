@@ -1,8 +1,10 @@
-const http = require('node:http')
-const { createReadStream, existsSync, statSync } = require('node:fs')
-const { extname, join, normalize, resolve, sep } = require('node:path')
+import http from 'node:http'
+import { createReadStream, existsSync, statSync } from 'node:fs'
+import { extname, join, normalize, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const publicRoot = resolve(__dirname, '..', 'public')
+const serverDirectory = fileURLToPath(new URL('.', import.meta.url))
+const publicRoot = resolve(serverDirectory, '..', 'public')
 const port = Number(process.env.PORT || 3000)
 
 const contentTypes = {
