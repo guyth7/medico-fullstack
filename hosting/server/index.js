@@ -1,10 +1,12 @@
 import http from 'node:http'
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { extname, join, normalize, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const serverDirectory = fileURLToPath(new URL('.', import.meta.url))
-const publicRoot = resolve(serverDirectory, '..', 'public')
+const publicRootCandidates = [
+  resolve(process.cwd(), 'dist', 'public'),
+  resolve(process.cwd(), 'public'),
+]
+const publicRoot = publicRootCandidates.find((candidate) => existsSync(candidate)) || publicRootCandidates[0]
 const port = Number(process.env.PORT || 3000)
 
 const contentTypes = {
