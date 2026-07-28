@@ -6,7 +6,7 @@ if (!existsSync('out')) {
 
 rmSync('dist', { recursive: true, force: true })
 mkdirSync('dist', { recursive: true })
-cpSync('out', 'dist/public', { recursive: true })
+cpSync('out', 'dist/client', { recursive: true })
 mkdirSync('dist/server', { recursive: true })
 mkdirSync('dist/.openai', { recursive: true })
 cpSync('hosting/server/index.js', 'dist/server/index.js')
