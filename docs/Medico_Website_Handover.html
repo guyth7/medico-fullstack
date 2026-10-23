@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Medico Website — Technical Handover Record</title>
+  <style>
+    @page { size: A4; margin: 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #172033;
+      font: 10.5pt/1.5 "Segoe UI", Arial, sans-serif;
+      background: white;
+    }
+    .cover {
+      min-height: 245mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 18mm;
+      color: white;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #071426, #0f2949 58%, #0a806c);
+      page-break-after: always;
+    }
+    .mark {
+      width: 68px;
+      height: 68px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 26px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #2589eb, #11b98c);
+      font-size: 31px;
+      font-weight: 800;
+    }
+    h1 { margin: 0; font-size: 31pt; line-height: 1.08; }
+    .cover p { max-width: 520px; margin: 14px 0 0; color: #c6d7ed; font-size: 14pt; }
+    .cover-meta { margin-top: 42px; color: #91add0; font-size: 10pt; }
+    h2 {
+      margin: 22px 0 9px;
+      padding-bottom: 5px;
+      color: #0b4e8c;
+      font-size: 16pt;
+      border-bottom: 2px solid #d9e8f6;
+      break-after: avoid;
+    }
+    h3 { margin: 14px 0 5px; color: #173d65; font-size: 11.5pt; break-after: avoid; }
+    p { margin: 5px 0 9px; }
+    ul, ol { margin: 5px 0 12px 20px; padding: 0; }
+    li { margin: 3px 0; }
+    table { width: 100%; margin: 8px 0 14px; border-collapse: collapse; break-inside: avoid; }
+    th, td { padding: 7px 9px; text-align: left; vertical-align: top; border: 1px solid #d9e2ec; }
+    th { width: 34%; color: #173d65; background: #edf5fc; font-weight: 700; }
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #123b62;
+      background: #eef3f8;
+      font: 9.5pt Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+    pre {
+      margin: 8px 0 14px;
+      padding: 11px 13px;
+      color: #eaf4ff;
+      background: #0b192d;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      font: 9pt/1.45 Consolas, monospace;
+      break-inside: avoid;
+    }
+    a { color: #126ec5; text-decoration: none; overflow-wrap: anywhere; }
+    .notice {
+      margin: 10px 0 15px;
+      padding: 10px 12px;
+      border-left: 4px solid #d69516;
+      color: #604408;
+      background: #fff7dd;
+      border-radius: 6px;
+    }
+    .success {
+      border-left-color: #169a70;
+      color: #075a42;
+      background: #e8faf4;
+    }
+    .page-break { page-break-before: always; }
+    .footer-note { margin-top: 20px; color: #66758a; font-size: 8.5pt; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="mark">M</div>
+    <h1>Medico Website</h1>
+    <p>Technical handover record for hosting, Firebase services, routes, security, deployment, and administrator access.</p>
+    <div class="cover-meta">
+      Current production version: 10<br>
+      Prepared: July 28, 2026<br>
+      Classification: Private — contains administrator credentials
+    </div>
+  </section>
+
+  <h2>1. Production Website</h2>
+  <table>
+    <tr><th>Public URL</th><td><a href="https://medico-health-admin.aa01028622166jb.chatgpt.site">https://medico-health-admin.aa01028622166jb.chatgpt.site</a></td></tr>
+    <tr><th>Site name</th><td>Medico Health Administration</td></tr>
+    <tr><th>Site slug</th><td><code>medico-health-admin</code></td></tr>
+    <tr><th>Access mode</th><td>Public</td></tr>
+    <tr><th>Current deployed version</th><td>10</td></tr>
+    <tr><th>Hosting project ID</th><td><code>appgprj_6a687624a110819189075d827fa3ff78</code></td></tr>
+    <tr><th>Hosting provider</th><td>OpenAI Sites</td></tr>
+    <tr><th>Runtime and CDN</th><td>Cloudflare Workers with static assets</td></tr>
+    <tr><th>Custom domain</th><td>None currently</td></tr>
+  </table>
+  <div class="notice success">
+    Public access means anyone can reach the login page. Firebase Authentication and Firestore security rules continue to protect staff dashboards, administrator features, and medical information.
+  </div>
+
+  <h2>2. Ports and Local Development</h2>
+  <table>
+    <tr><th>Production HTTPS</th><td>Port <code>443</code></td></tr>
+    <tr><th>Production HTTP</th><td>Port <code>80</code>, managed by the hosting provider</td></tr>
+    <tr><th>Local development</th><td><code>http://localhost:3000</code></td></tr>
+    <tr><th>Local port</th><td><code>3000</code></td></tr>
+    <tr><th>Local command</th><td><code>npm run dev</code></td></tr>
+  </table>
+  <p>No custom backend port needs to be opened. Wrangler test ports are temporary and are not production ports.</p>
+
+  <h2>3. Administrator Account</h2>
+  <table>
+    <tr><th>Email</th><td><code>admin@medico-health.example</code></td></tr>
+    <tr><th>Password</th><td><code>adminadmin</code></td></tr>
+    <tr><th>Firebase UID</th><td><code>hihhC2JMyGbOW54ouZqzdvzWhhj1</code></td></tr>
+  </table>
+  <div class="notice">
+    This password is intentionally included because this is a private handover record. It is weak and should be replaced with a longer unique password before real-world or clinical use.
+  </div>
+
+  <h2>4. Main Website Routes</h2>
+  <table>
+    <tr><th><code>/</code></th><td>Login and staff registration</td></tr>
+    <tr><th><code>/admin/</code></th><td>Administrator dashboard</td></tr>
+    <tr><th><code>/admin/patient/?id=NATIONAL_ID</code></th><td>Administrator patient record</td></tr>
+    <tr><th><code>/doctor/</code></th><td>Doctor dashboard</td></tr>
+    <tr><th><code>/doctor/patient/?id=NATIONAL_ID</code></th><td>Doctor patient record</td></tr>
+    <tr><th><code>/hospital/</code></th><td>Hospital dashboard</td></tr>
+    <tr><th><code>/laboratory/</code></th><td>Laboratory dashboard</td></tr>
+    <tr><th><code>/pharmacy/</code></th><td>Pharmacy dashboard</td></tr>
+    <tr><th><code>/file-viewer/?patientId=ID&amp;section=SECTION&amp;recordId=ID</code></th><td>Medical file viewer</td></tr>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>5. Firebase Project</h2>
+  <table>
+    <tr><th>Project ID</th><td><code>medical-record-system-97a1f</code></td></tr>
+    <tr><th>Authentication domain</th><td><code>medical-record-system-97a1f.firebaseapp.com</code></td></tr>
+    <tr><th>Firestore database</th><td><code>(default)</code></td></tr>
+    <tr><th>Realtime Database</th><td><code>https://medical-record-system-97a1f-default-rtdb.firebaseio.com</code></td></tr>
+    <tr><th>Storage bucket</th><td><code>medical-record-system-97a1f.firebasestorage.app</code></td></tr>
+    <tr><th>Messaging sender ID</th><td><code>158318298038</code></td></tr>
+    <tr><th>Firebase web application ID</th><td><code>1:158318298038:web:c3f9953e2a25674a1ff717</code></td></tr>
+    <tr><th>Measurement ID</th><td><code>G-XCFMDVERL1</code></td></tr>
+    <tr><th>Firebase Console</th><td><a href="https://console.firebase.google.com/project/medical-record-system-97a1f">https://console.firebase.google.com/project/medical-record-system-97a1f</a></td></tr>
+  </table>
+
+  <h2>6. Important Firestore Collections</h2>
+  <table>
+    <tr><th><code>admins</code></th><td>Administrator permissions</td></tr>
+    <tr><th><code>website_users</code></th><td>Approved staff profiles</td></tr>
+    <tr><th><code>staff_requests</code></th><td>Pending, approved, and rejected staff registrations</td></tr>
+    <tr><th><code>patients</code></th><td>Patient profiles and nested medical records</td></tr>
+    <tr><th><code>admin_audit</code></th><td>Administrator activity history</td></tr>
+  </table>
+  <p>Patient documents may contain the following nested collections:</p>
+  <ul>
+    <li><code>prescriptions</code></li>
+    <li><code>diagnoses</code></li>
+    <li><code>allergies</code></li>
+    <li><code>surgeries</code></li>
+    <li><code>lab</code></li>
+    <li><code>radiology</code></li>
+    <li><code>fileChunks</code></li>
+  </ul>
+  <p>Administrator patient deletion recursively removes the patient and these associated records.</p>
+
+  <h2>7. Registration and Permissions</h2>
+  <p>Supported staff roles:</p>
+  <ul>
+    <li>Doctor</li>
+    <li>Hospital</li>
+    <li>Laboratory</li>
+    <li>Pharmacy</li>
+  </ul>
+  <p>New staff accounts register through the website, receive a pending status, and cannot enter their dashboard until an administrator approves the request. The Admin page is protected by the <code>admins/{uid}</code> Firestore authorization record; knowing the URL does not bypass security.</p>
+
+  <h2>8. Firestore Rules</h2>
+  <table>
+    <tr><th>Rules file</th><td><code>firestore.web.rules</code></td></tr>
+    <tr><th>Firebase configuration</th><td><code>firebase.web.json</code></td></tr>
+    <tr><th>Live Firebase project</th><td><code>medical-record-system-97a1f</code></td></tr>
+    <tr><th>Last confirmed live ruleset</th><td><code>projects/medical-record-system-97a1f/rulesets/7fe1bd5a-7062-46c2-9a62-736e8d773771</code></td></tr>
+  </table>
+  <p>Deploy website Firestore rules with:</p>
+  <pre>npm run firebase:deploy:web-rules</pre>
+
+  <div class="page-break"></div>
+  <h2>9. Technology and Architecture</h2>
+  <ul>
+    <li>Next.js 15.5.x</li>
+    <li>React 19</li>
+    <li>Firebase Authentication</li>
+    <li>Cloud Firestore</li>
+    <li>Tailwind CSS</li>
+    <li>Static Next.js export</li>
+    <li>Cloudflare Workers static-assets handler</li>
+    <li>OpenAI Sites production hosting</li>
+    <li>English and Arabic localization</li>
+    <li>LTR and RTL layouts</li>
+  </ul>
+
+  <h2>10. Local Project and Build</h2>
+  <table>
+    <tr><th>Workspace</th><td><code>C:\graduation_website</code></td></tr>
+    <tr><th>Development command</th><td><code>npm run dev</code></td></tr>
+    <tr><th>Production build command</th><td><code>npm run build</code></td></tr>
+  </table>
+  <p>Generated deployment structure:</p>
+  <pre>dist/
+├── client/             Static website assets
+├── server/index.js     Cloudflare Worker handler
+├── package.json
+└── .openai/hosting.json</pre>
+
+  <h2>11. Source and Deployment Version</h2>
+  <table>
+    <tr><th>Current Git commit</th><td><code>141046e039a6e3a0b47f51c570d142e9cc00e192</code></td></tr>
+    <tr><th>Commit description</th><td>Hide duplicate native password reveal control</td></tr>
+    <tr><th>Current production site version</th><td>10</td></tr>
+  </table>
+
+  <h2>12. Verified Production Status</h2>
+  <p>The following areas were verified successfully after deployment:</p>
+  <ul>
+    <li>Homepage and login</li>
+    <li>Administrator dashboard</li>
+    <li>Doctor dashboard</li>
+    <li>Hospital dashboard</li>
+    <li>Laboratory dashboard</li>
+    <li>Pharmacy dashboard</li>
+    <li>Patient record</li>
+    <li>Medical file viewer</li>
+  </ul>
+  <div class="notice success">All verified routes returned HTTP status 200.</div>
+
+  <p class="footer-note">
+    Sensitive deployment tokens, source-repository credentials, and private session tokens are intentionally excluded. Store this PDF privately because it contains the administrator password.
+  </p>
+</body>
+</html>

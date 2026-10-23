@@ -1,7 +1,8 @@
 'use client'
 import { useEffect } from 'react'
+import { onAuthStateChanged } from 'firebase/auth'
 import { collection, doc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { auth, db } from '@/lib/firebase'
 import { deletePatientRecord, ensurePatientSubcollections, listPatients, patientDocumentId } from '@/lib/patientFirestore'
 import { getPatientYearOfBirth } from '@/lib/patientDemographics'
 import { useState } from 'react'
@@ -61,7 +62,26 @@ const fetchPatients = async () => {
 }
 
 useEffect(() => {
-  fetchPatients()
+  let active = true
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user || !active) return
+
+    try {
+      // Wait for Firebase Auth restoration and refresh claims before the
+      // secured patient query. Querying during the initial mount races auth
+      // hydration and produces a false permission-denied error.
+      await user.getIdToken(true)
+      if (active) await fetchPatients()
+    } catch (error) {
+      console.error('Could not refresh Firebase access:', error)
+      if (active) toast.error('Could not verify Firebase access. Please sign in again.')
+    }
+  })
+
+  return () => {
+    active = false
+    unsubscribe()
+  }
 }, [])
 
   const onSearch = () => {

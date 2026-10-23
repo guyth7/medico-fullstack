@@ -1,0 +1,268 @@
+// Medico complete website and mobile application Firebase logical ERD
+// Firestore document IDs are represented as varchar primary keys.
+// Subcollections are modeled as child tables for ERD clarity.
+// Firebase Authentication is external to Firestore but included to show identity links.
+
+Project medico_website {
+  database_type: "Firestore (logical relational model)"
+  Note: "Medico staff administration, patient records, mobile identity linking, and medical subcollections"
+}
+
+Enum staff_role {
+  Doctor
+  Hospital
+  Laboratory
+  Pharmacy
+}
+
+Enum approval_status {
+  pending
+  approved
+  rejected
+  revoked
+}
+
+Enum gender_type {
+  Male
+  Female
+}
+
+Enum record_status {
+  Active
+  Pending
+  Completed
+}
+
+Table auth_users {
+  uid varchar [pk, note: "Firebase Authentication UID"]
+  email varchar [unique]
+  display_name varchar
+  email_verified boolean
+  auth_provider varchar [default: 'password']
+  created_at timestamp
+  last_sign_in_at timestamp
+
+  Note: "External Firebase Authentication identity; not a Firestore collection"
+}
+
+Table admins {
+  admin_id varchar [pk, ref: > auth_users.uid, note: "Firestore document ID equals Firebase UID"]
+  full_name varchar
+  email varchar
+  active boolean [not null, default: true]
+  created_by varchar [ref: > auth_users.uid]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table staff_requests {
+  request_id varchar [pk, ref: > auth_users.uid, note: "Document ID normally equals requesting UID"]
+  uid varchar [not null, unique, ref: > auth_users.uid]
+  full_name varchar [not null]
+  email varchar [not null]
+  role staff_role [not null]
+  status approval_status [not null, default: 'pending']
+  requested_at timestamp
+  reviewed_at timestamp
+  reviewed_by varchar [ref: > admins.admin_id]
+  updated_at timestamp
+}
+
+Table website_users {
+  user_id varchar [pk, ref: > auth_users.uid, note: "Firestore document ID equals Firebase UID"]
+  uid varchar [not null, unique, ref: > auth_users.uid]
+  full_name varchar [not null]
+  email varchar [not null]
+  role staff_role [not null]
+  auth_provider varchar [default: 'password']
+  approval_status approval_status [default: 'approved']
+  approved_at timestamp
+  approved_by varchar [ref: > admins.admin_id]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table patients {
+  patient_id varchar [pk, note: "Firestore document ID, commonly name-nationalId"]
+  name varchar [not null]
+  national_id varchar [not null, unique, note: "Stored as nationalId and legacy national_id in Firestore"]
+  year_of_birth int
+  gender gender_type
+  blood_type varchar
+  weight_kg int
+  height_cm int
+  phone varchar
+  email varchar
+  patient_auth_uid varchar [unique, ref: > auth_users.uid, note: "Links the patient mobile account"]
+  identity_linked_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table patient_emergency_contacts {
+  patient_id varchar [pk, ref: - patients.patient_id]
+  full_name varchar
+  phone_number varchar
+  relationship varchar
+
+  Note: "Stored as the embedded emergencyContact object inside the patient document"
+}
+
+Table mobile_users {
+  user_id varchar [pk, note: "Firestore users collection document ID"]
+  uid varchar [not null, unique, ref: > auth_users.uid]
+  role varchar [not null, default: 'patient']
+  national_id varchar [not null]
+  full_name varchar
+  email varchar
+  created_at timestamp
+  updated_at timestamp
+
+  Note: "Patient mobile profile collection supported by the shared Firestore rules"
+}
+
+Table national_id_reservations {
+  national_id varchar [pk, note: "Firestore nationalIds document ID"]
+  uid varchar [not null, unique, ref: > auth_users.uid]
+  created_at timestamp
+  updated_at timestamp
+
+  Note: "Prevents multiple mobile accounts from reserving the same National ID"
+}
+
+Table prescriptions {
+  prescription_id varchar [pk, note: "Auto-generated Firestore document ID"]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  national_id varchar
+  doctor varchar
+  author_role varchar
+  prescription_date date
+  status record_status [default: 'Active']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table prescription_items {
+  item_id varchar [pk, note: "Logical ERD key; items are embedded in the prescription items array"]
+  prescription_id varchar [not null, ref: > prescriptions.prescription_id]
+  medication_name varchar [not null]
+  dosage varchar
+  frequency varchar
+  duration varchar
+  notes varchar
+  item_order int
+}
+
+Table allergies {
+  allergy_id varchar [pk]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  national_id varchar
+  allergy_name varchar [not null]
+  recorded_date date
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table diagnoses {
+  diagnosis_id varchar [pk]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  national_id varchar
+  diagnosis_name varchar [not null]
+  diagnosis_date date
+  doctor varchar
+  author_role varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table surgeries {
+  surgery_id varchar [pk]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  national_id varchar
+  surgery_name varchar [not null]
+  surgery_date date
+  surgeon varchar
+  hospital varchar
+  notes varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table laboratory_records {
+  lab_record_id varchar [pk]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  national_id varchar
+  record_type varchar [not null]
+  lab_name varchar
+  record_date date
+  file_name varchar
+  file_type varchar
+  file_size int
+  file_base64 text [note: "Inline file content when small enough"]
+  storage_status varchar
+  open_file_from_firebase varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table radiology_records {
+  radiology_record_id varchar [pk]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  national_id varchar
+  record_type varchar [not null]
+  lab_name varchar [note: "Facility/lab name in the current shared file form"]
+  record_date date
+  file_name varchar
+  file_type varchar
+  file_size int
+  file_base64 text [note: "Inline file content when small enough"]
+  storage_status varchar
+  open_file_from_firebase varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table medical_file_chunks {
+  chunk_id varchar [pk]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  parent_section varchar [not null, note: "lab or radiology"]
+  parent_record_id varchar [not null, note: "Logical reference to a laboratory or radiology record"]
+  chunk_order int [not null]
+  chunk_data text [not null]
+  created_at timestamp
+
+  Note: "Nested fileChunks subcollection. Polymorphic parent is represented by parent_section plus parent_record_id."
+}
+
+Table patient_subcollection_markers {
+  marker_id varchar [pk, note: "Usually _meta"]
+  patient_id varchar [not null, ref: > patients.patient_id]
+  collection_name varchar [not null]
+  visible_in_firebase_console boolean [default: true]
+  backend_collections json
+  note text
+  updated_at timestamp
+
+  Note: "Optional metadata documents used to make empty Firestore subcollections visible"
+}
+
+Table admin_audit {
+  event_id varchar [pk, note: "Auto-generated Firestore document ID"]
+  admin_uid varchar [not null, ref: > admins.admin_id]
+  admin_email varchar
+  action varchar [not null, note: "Examples: staff_request_approved, staff_request_rejected, staff_access_revoked, patient_updated, patient_deleted"]
+  target_uid varchar [ref: > auth_users.uid]
+  target_email varchar
+  role varchar
+  patient_id varchar [ref: > patients.patient_id]
+  patient_name varchar
+  national_id_last_four varchar
+  cleanup_errors json
+  created_at timestamp
+
+  Note: "Immutable administrator audit history"
+}
+
+Ref: staff_requests.request_id - website_users.user_id
+Ref: patients.national_id - mobile_users.national_id
+Ref: patients.national_id - national_id_reservations.national_id

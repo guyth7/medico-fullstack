@@ -118,15 +118,30 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [requestSnapshot, staffSnapshot, patientSnapshot, auditSnapshot] = await Promise.all([
+      const [requestSnapshot, staffSnapshot, patientSnapshot, mobileUserSnapshot, auditSnapshot] = await Promise.all([
         getDocs(collection(db, 'staff_requests')),
         getDocs(collection(db, 'website_users')),
         getDocs(collection(db, 'patients')),
+        getDocs(collection(db, 'users')),
         getDocs(query(collection(db, 'admin_audit'), orderBy('createdAt', 'desc'), limit(100))),
       ])
+      const registeredNationalIds = new Set(
+        mobileUserSnapshot.docs
+          .map((item) => String(item.data().nationalId || item.data().national_id || '').trim())
+          .filter((nationalId) => /^\d{11}$/.test(nationalId))
+      )
       setRequests(requestSnapshot.docs.map((item) => ({ id: item.id, ...item.data() })))
       setStaff(staffSnapshot.docs.map((item) => ({ id: item.id, ...item.data() })))
-      setPatients(patientSnapshot.docs.map((item) => ({ id: item.id, firestoreId: item.id, ...item.data() })))
+      setPatients(patientSnapshot.docs.map((item) => {
+        const data = item.data()
+        const nationalId = String(data.nationalId || data.national_id || '').trim()
+        return {
+          id: item.id,
+          firestoreId: item.id,
+          ...data,
+          mobileLinked: registeredNationalIds.has(nationalId),
+        }
+      }))
       setAudit(auditSnapshot.docs.map((item) => ({ id: item.id, ...item.data() })))
     } catch (error) {
       console.error('[Admin] Could not load dashboard data', error)
@@ -504,7 +519,9 @@ export default function AdminPage() {
                         <Cell><div>{patient.phone || '—'}</div><div className="text-xs text-slate-500">{patient.email || '—'}</div></Cell>
                         <Cell mono>
                           <div>{patient.id}</div>
-                          <div className="mt-1 text-[10px] text-slate-500">UID: {patient.patient_auth_uid || 'Not linked'}</div>
+                          <div className={`mt-1 text-[10px] ${patient.mobileLinked ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            {patient.mobileLinked ? 'Mobile account linked' : 'No mobile account'}
+                          </div>
                         </Cell>
                         <Cell>{formatDate(patient.createdAt)}</Cell>
                         <Cell>
@@ -584,7 +601,7 @@ export default function AdminPage() {
 }
 
 function Overview({ staff, patients, pending, audit }) {
-  const linkedPatients = patients.filter((patient) => patient.patient_auth_uid).length
+  const linkedPatients = patients.filter((patient) => patient.mobileLinked).length
   const stats = [
     { label: 'Active staff', value: staff.length, icon: UserRoundCheck, color: 'text-emerald-300', bg: 'bg-emerald-400/10' },
     { label: 'Patients', value: patients.length, icon: Users, color: 'text-sky-300', bg: 'bg-sky-400/10' },

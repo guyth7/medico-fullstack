@@ -12,20 +12,26 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
     }
 
+    function patientNationalId() {
+      return request.auth.token.national_id is string
+        ? request.auth.token.national_id
+        : request.auth.token.name;
+    }
+
     function isVerifiedPatient() {
       return isSignedIn()
         && request.auth.token.email_verified == true
-        && request.auth.token.name is string
-        && request.auth.token.name.matches('^[0-9]{11}$');
+        && patientNationalId() is string
+        && patientNationalId().matches('^[0-9]{11}$');
     }
 
     function patientIdentityMatches(patientData) {
       return isVerifiedPatient()
         && (
           (patientData.national_id is string
-            && patientData.national_id == request.auth.token.name)
+            && patientData.national_id == patientNationalId())
           || (patientData.nationalId is string
-            && patientData.nationalId == request.auth.token.name)
+            && patientData.nationalId == patientNationalId())
         );
     }
 
@@ -105,8 +111,8 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.role == 'patient'
         && (
-          request.resource.data.nationalId == request.auth.token.name
-          || request.resource.data.national_id == request.auth.token.name
+          request.resource.data.nationalId == patientNationalId()
+          || request.resource.data.national_id == patientNationalId()
         );
       allow get: if isAdmin() || (isSignedIn()
         && (userId == request.auth.uid || resource.data.uid == request.auth.uid));
@@ -117,25 +123,25 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.role == resource.data.role
         && (
-          request.resource.data.nationalId == request.auth.token.name
-          || request.resource.data.national_id == request.auth.token.name
+          request.resource.data.nationalId == patientNationalId()
+          || request.resource.data.national_id == patientNationalId()
         );
       allow delete: if false;
     }
 
     match /nationalIds/{nationalId} {
       allow create: if isVerifiedPatient()
-        && nationalId == request.auth.token.name
+        && nationalId == patientNationalId()
         && request.resource.data.uid == request.auth.uid;
       // Registration checks this deterministic reservation path before it
       // exists. Permit only the verified account whose Authentication
       // display-name claim is the same National ID to perform that get.
       allow get: if isAdmin()
-        || (isVerifiedPatient() && nationalId == request.auth.token.name);
+        || (isVerifiedPatient() && nationalId == patientNationalId());
       allow list: if isAdmin()
         || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow update: if isVerifiedPatient()
-        && nationalId == request.auth.token.name
+        && nationalId == patientNationalId()
         && resource.data.uid == request.auth.uid
         && request.resource.data.uid == request.auth.uid;
       allow delete: if false;

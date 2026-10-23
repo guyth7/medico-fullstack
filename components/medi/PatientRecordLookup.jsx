@@ -51,13 +51,19 @@ export default function PatientRecordLookup({ role, roleColor, icon: Icon, baseP
   const [patientToDelete, setPatientToDelete] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [patientLoadState, setPatientLoadState] = useState('loading')
 
   const fetchPatients = async () => {
     try {
-      setPatients(await listPatients(db))
+      const loadedPatients = await listPatients(db)
+      setPatients(loadedPatients)
+      setPatientLoadState('ready')
+      return loadedPatients
     } catch (error) {
+      setPatientLoadState('error')
       console.error('Could not load patients from Firebase:', error)
       toast.error('Could not load patients from Firebase')
+      throw error
     }
   }
 
@@ -84,12 +90,12 @@ export default function PatientRecordLookup({ role, roleColor, icon: Icon, baseP
   }, [])
 
   const onSearch = () => {
-    const query = q.trim().toLowerCase()
-    if (!query) return
+    const searchTerm = q.trim().toLowerCase()
+    if (!searchTerm) return
 
     setResults(patients.filter((patient) => (
-      patient.nationalId?.includes(q.trim()) ||
-      patient.name?.toLowerCase().includes(query)
+      patient.nationalId?.includes(searchTerm) ||
+      patient.name?.toLowerCase().includes(searchTerm)
     )))
   }
 
@@ -312,7 +318,7 @@ export default function PatientRecordLookup({ role, roleColor, icon: Icon, baseP
               value={q}
               onChange={(event) => setQ(event.target.value)}
               onKeyDown={(event) => event.key === 'Enter' && onSearch()}
-              placeholder="Enter National ID (e.g., 1234567890)"
+              placeholder="Enter National ID (11 digits)"
               className="flex-1 bg-transparent outline-none py-3 font-mono text-sm"
             />
           </div>
@@ -323,6 +329,54 @@ export default function PatientRecordLookup({ role, roleColor, icon: Icon, baseP
             <Plus className="w-4 h-4" /> Add Patient
           </button>
         </div>}
+
+        {results === null && patientLoadState === 'loading' && (
+          <div className="mb-8 rounded-xl border border-sky-400/20 bg-sky-400/5 p-5 text-center text-sm text-sky-200">
+            Loading patient records from Firebase…
+          </div>
+        )}
+
+        {results === null && patientLoadState === 'error' && (
+          <div className="mb-8 rounded-xl border border-red-400/25 bg-red-500/10 p-5 text-center">
+            <div className="font-semibold text-red-200">Patient records could not be loaded</div>
+            <button
+              onClick={async () => {
+                setPatientLoadState('loading')
+                try {
+                  await auth.currentUser?.getIdToken(true)
+                  await fetchPatients()
+                } catch (_) {}
+              }}
+              className="mt-3 rounded-lg border border-red-300/25 px-4 py-2 text-sm text-red-100 hover:bg-red-400/10"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {results === null && patientLoadState === 'ready' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
+            <h3 className="mb-3 font-display font-semibold text-slate-300">
+              {patients.length} patient record{patients.length !== 1 ? 's' : ''} ready
+            </h3>
+            {patients.length === 0 ? (
+              <div className="rounded-xl bg-white/5 p-6 text-center text-sm text-slate-500">No patient records are currently stored in Firebase.</div>
+            ) : (
+              <div className="space-y-2">
+                {patients.slice(0, 4).map((patient) => (
+                  <button key={patient.id} onClick={() => setSelectedId(patient.nationalId)} className="flex w-full items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#1D7FE8] to-[#10B981] font-display font-bold">{(patient.name || 'Patient').split(' ').map((name) => name[0]).slice(0, 2).join('')}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-display font-semibold">{patient.name || 'Unnamed Patient'}</div>
+                      <div className="font-mono text-xs text-slate-400">ID {patient.nationalId || patient.national_id || 'Not provided'}</div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-slate-400" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {results !== null && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
